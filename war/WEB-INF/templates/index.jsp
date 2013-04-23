@@ -64,12 +64,12 @@
       <div class="span1"><br></div>
       <div class="span6 fullHeight">
         <div>        
-          <input id="titleBox" class="titleInput" type="text" on-keyup="updateSelectedBox()"></input>
-          <button ng-click="addSection()">Add New Section</button>
+          <input id="titleBox" class="titleInput" type="text" placeholder="Add Title" on-keyup="updateSelectedBox()"></input>         
         </div>  
-        <textarea on-keyup="updateSelectedBox()" id="editor" cloud-editor></textarea>
+        <textarea on-keyup="updateSelectedBox()" id="editor" placeholder="Add Content" cloud-editor></textarea>
       </div>
       <div class="span6 sectionsHolder">
+        <span class="titleInput addbutton" ng-click="addSection()">+ Add Section</span>
         <table class="bitOnRight">
           <tr><td class="minisection"/><td class="minisection"/><td class="minisection"/></tr>                  
           <tr ng-repeat="sectionrow in sections">

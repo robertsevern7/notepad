@@ -96,13 +96,34 @@ body {
     border-radius:10px;
     overflow: hidden;
     text-overflow: ellipsis;
+    background-color: #F2F2F2;
+}
+
+.bordered:hover {
+    background-color: #E6E6E6;
 }
 
 .titleInput {
 	font-size: 24px !important;
+	line-height: 40px !important;
 	height: 40px !important;
 }
 
+.addbutton {
+	display: inline-block;
+	margin: 0 0 0 9px;
+	padding: 2px;
+	cursor: pointer;
+	border: 3px solid;
+	border-radius: 10px;
+	background-color: #F2F2F2;
+}
+
+.addbutton:hover {
+	background-color: #E6E6E6;
+}
+
 .selected {
-	border-color: red;
+	background-color: #D8D8D8 !important;
+	border-width: 2px;
 }

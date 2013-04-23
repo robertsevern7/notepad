@@ -52,10 +52,8 @@ function UpdaterCtrl($scope) {
 		var ed = $('#editor');
 		var title = $('#titleBox');
 		if (title.val()) {
-			console.log('setting ed')
 			ed.focus();
 		} else {
-			console.log('setting title')
 			title.focus();			
 		}
 		setTimeout(function() {
