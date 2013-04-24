@@ -12,11 +12,14 @@ function UserCtrl($scope, backend) {
 
 function UpdaterCtrl($scope) {
 	$scope.ROW_SIZE = 3;
+	$scope.PROMPT_TEXT = 'Add Content';
 	$scope.sections = [
 		[{
 			id: 'section_0',
 			title: '',
-			text: ''
+			text: '',
+			displayText: $scope.PROMPT_TEXT,
+			emptyContent: true
 		}]
     ];
 	
@@ -29,7 +32,9 @@ function UpdaterCtrl($scope) {
 	
 	$scope.updateSelectedBox = function() {
 		$scope.activeSection.title = titleBox.val();
-		$scope.activeSection.text = editor.val();		
+		$scope.activeSection.text = editor.val();
+		$scope.activeSection.displayText = editor.val() || (titleBox.val() ? '' : $scope.PROMPT_TEXT);
+		$scope.activeSection.emptyContent = !(editor.val() || titleBox.val());
 	}
 	
 	var findActiveSection = function(id) {
@@ -74,7 +79,9 @@ function UpdaterCtrl($scope) {
 	    var newSection = {
 			id: nextId,
 			title: '',
-			text: ''
+			text: '',
+			displayText: $scope.PROMPT_TEXT,
+			emptyContent: true
 		}
 		if (currRow.length === $scope.ROW_SIZE) {
 			currRow = [];

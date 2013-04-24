@@ -74,9 +74,9 @@
           <tr><td class="minisection"/><td class="minisection"/><td class="minisection"/></tr>                  
           <tr ng-repeat="sectionrow in sections">
             <td class="minisection" ng-repeat="section in sectionrow">
-              <div id={{section.id}} ng-click="setActive(section.id)" class="bordered">               
+              <div id={{section.id}} ng-click="setActive(section.id)" class="bordered" ng-class="{'emptycontent': section.emptyContent}">
                 <h3>{{section.title}}</h3>                                  
-                <div>{{section.text}}</div>                
+                <div>{{section.displayText}}</div>                
               </div>
             </td>
             <br>
