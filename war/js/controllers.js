@@ -56,11 +56,24 @@ function UpdaterCtrl($scope) {
 		$('.selected').removeClass('selected');
 		var ed = $('#editor');
 		var title = $('#titleBox');
-		if (title.val()) {
+		
+		var titleText = title.val();
+		var edText = ed.val();
+		
+		//clear to allow text at end
+		if (titleText || edText) {			
+			ed.val('');
 			ed.focus();
-		} else {
-			title.focus();			
+			ed.val(edText);
+		} else {			
+			title.val('');
+			title.focus();
+			title.val(titleText);
 		}
+		
+		
+		
+		
 		setTimeout(function() {
 			$('#' + id).addClass('selected');
 		}, 100)		
