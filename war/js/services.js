@@ -28,12 +28,11 @@ module.factory('doc',
 module.factory('editor',
     function (doc, backend, $q, $rootScope, $log) {
         var editor = null;
-        //var EditSession = require("ace/edit_session").EditSession;
+        
         var service = {
             loading:false,
             saving:false,
-            rebind:function (element) {            
-                //editor = ace.edit(element);
+            rebind:function (element) {                            
             	editor = element;
             },
             snapshot:function () {
@@ -41,7 +40,7 @@ module.factory('editor',
                 var data = angular.extend({}, doc.info);
                 data.resource_id = doc.resource_id;
                 if (doc.info.editable) {
-                    data.content = editor.value;
+                    data.content = JSON.stringify(this.DataToSave);
                 }
                 return data;
             },
@@ -83,7 +82,7 @@ module.factory('editor',
                         return result;
                     }));
             },
-            save:function (newRevision) {
+            save:function (newRevision) {            	
                 $log.info("Saving file", newRevision);
                 if (this.saving || this.loading) {
                     throw 'Save called from incorrect state';
@@ -166,7 +165,7 @@ module.factory('backend',
                     }
                 });
             },
-            save:function (fileInfo, newRevision) {
+            save:function (fileInfo, newRevision) {            	
                 $log.info('Saving', fileInfo);
                 return $http({
                     url:'/svc',

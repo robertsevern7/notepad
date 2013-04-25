@@ -10,7 +10,7 @@ function UserCtrl($scope, backend) {
     $scope.login();
 }
 
-function UpdaterCtrl($scope) {
+function UpdaterCtrl($scope, editor) {
 	$scope.ROW_SIZE = 3;
 	$scope.PROMPT_TEXT = 'Add Content';
 	$scope.sections = [
@@ -23,7 +23,7 @@ function UpdaterCtrl($scope) {
 		}]
     ];
 	
-	var editor = $('#editor');
+	var editorInput = $('#editor');
 	var titleBox = $('#titleBox');
 		
 	setTimeout(function() {
@@ -32,9 +32,11 @@ function UpdaterCtrl($scope) {
 	
 	$scope.updateSelectedBox = function() {
 		$scope.activeSection.title = titleBox.val();
-		$scope.activeSection.text = editor.val();
-		$scope.activeSection.displayText = editor.val() || (titleBox.val() ? '' : $scope.PROMPT_TEXT);
-		$scope.activeSection.emptyContent = !(editor.val() || titleBox.val());
+		$scope.activeSection.text = editorInput.val();
+		$scope.activeSection.displayText = editorInput.val() || (titleBox.val() ? '' : $scope.PROMPT_TEXT);
+		$scope.activeSection.emptyContent = !(editorInput.val() || titleBox.val());
+		
+		editor.DataToSave = $scope.sections;
 	}
 	
 	var findActiveSection = function(id) {
@@ -44,7 +46,7 @@ function UpdaterCtrl($scope) {
 					$scope.activeSection = $scope.sections[i][j];
 					
 					titleBox.val($scope.activeSection.title);
-					editor.val($scope.activeSection.text);
+					editorInput.val($scope.activeSection.text);
 					return;
 				}
 			}
@@ -70,9 +72,6 @@ function UpdaterCtrl($scope) {
 			title.focus();
 			title.val(titleText);
 		}
-		
-		
-		
 		
 		setTimeout(function() {
 			$('#' + id).addClass('selected');
@@ -118,9 +117,8 @@ function EditorCtrl($scope, $location, $routeParams, $timeout, editor, doc, auto
     } else {
         // New doc, but defer to next event cycle to ensure init
         $timeout(function () {
-                editor.create($routeParams.folderId);
-            },
-            1);
+            editor.create($routeParams.folderId);
+        }, 1);
     }
 }
 

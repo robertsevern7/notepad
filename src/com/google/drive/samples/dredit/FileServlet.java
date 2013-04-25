@@ -23,8 +23,12 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.drive.samples.dredit.model.ClientFile;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.servlet.http.HttpServletRequest;
@@ -92,7 +96,7 @@ public class FileServlet extends DrEditServlet {
 
     if (!clientFile.content.equals("")) {
       file = service.files().insert(file,
-          ByteArrayContent.fromString(clientFile.mimeType, clientFile.content))
+          ByteArrayContent.fromString(clientFile.mimeType, convertContentToFileString(clientFile.content)))
           .execute();
     } else {
       file = service.files().insert(file).execute();
@@ -116,7 +120,7 @@ public class FileServlet extends DrEditServlet {
     // If there is content we update the given file
     if (clientFile.content != null) {
       file = service.files().update(clientFile.resource_id, file,
-          ByteArrayContent.fromString(clientFile.mimeType, clientFile.content))
+          ByteArrayContent.fromString(clientFile.mimeType, convertContentToFileString(clientFile.content)))
           .setNewRevision(newRevision).execute();
     } else { // If there is no content we patch the metadata only
       file = service.files().patch(clientFile.resource_id, file).setNewRevision(newRevision).execute();
@@ -124,6 +128,22 @@ public class FileServlet extends DrEditServlet {
 
     resp.setContentType(JSON_MIMETYPE);
     resp.getWriter().print(new Gson().toJson(file.getId()).toString());
+  }
+  
+  private String convertContentToFileString(String contentString) {	  
+	  JsonElement jelem = new Gson().fromJson(contentString, JsonElement.class);
+	  JsonArray contentObj = jelem.getAsJsonArray();
+	  
+	  StringBuilder sb = new StringBuilder();
+	  
+	  for (JsonElement entry : contentObj) {		  
+		  for (JsonElement entry2 : entry.getAsJsonArray()) {
+			  sb.append(entry2.getAsJsonObject().get("title").getAsString()).append("\n");		  
+			  sb.append(entry2.getAsJsonObject().get("text").getAsString()).append("\n\n");
+		  }
+	  }
+	  
+	  return sb.toString();
   }
 
   /**
