@@ -117,6 +117,10 @@ function UpdaterCtrl($scope, editor) {
 		var nextId = $scope.sections.addSection();
 	    $scope.sections.setActive(nextId);
 	}
+	
+	$scope.setActive = function(id) {
+		$scope.sections.setActive(id);
+	}
 }
 
 function EditorCtrl($scope, $location, $routeParams, $timeout, editor, doc, autosaver) {
