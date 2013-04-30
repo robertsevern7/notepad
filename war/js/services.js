@@ -38,9 +38,18 @@ module.factory('editor',
             snapshot:function () {
                 doc.dirty = false;
                 var data = angular.extend({}, doc.info);
-                data.resource_id = doc.resource_id;
+                data.resource_id = doc.resource_id;               
+                
                 if (doc.info.editable) {
-                    data.content = JSON.stringify(this.DataToSave);
+                	var outputContent = [];
+                	
+                	for (var i = 0, len = this.DataToSave.length; i < len; ++i) {
+                		var subArray = this.DataToSave[i];
+                		for (var j = 0, len2 = subArray.length; j < len2; ++j) {
+                			outputContent.push(subArray[j]);
+                		}
+                	}
+                    data.content = JSON.stringify(outputContent);
                 }
                 return data;
             },

@@ -64,10 +64,9 @@ public class UserServlet extends DrEditServlet {
    * @return Drive service object that is ready to make requests, or null if
    *         there was a problem.
    */
-  private Oauth2 getOauth2Service(HttpServletRequest req,
+  protected Oauth2 getOauth2Service(HttpServletRequest req,
       HttpServletResponse resp) {
     Credential credentials = getCredential(req, resp);
-
     return new Oauth2.Builder(TRANSPORT, JSON_FACTORY, credentials).build();
   }
 }

@@ -21,6 +21,16 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.oauth2.Oauth2;
+import com.google.api.services.oauth2.model.Userinfo;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.drive.samples.dredit.model.ClientFile;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -28,7 +38,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,8 +52,16 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author vicfryzel@google.com (Vic Fryzel)
  */
+
+/*
+ * Datastore format
+ * User
+ *   FileID
+ *     Section (Same group as FileID)
+ */
+
 @SuppressWarnings("serial")
-public class FileServlet extends DrEditServlet {
+public class FileServlet extends UserServlet {
   /**
    * Given a {@code file_id} URI parameter, return a JSON representation
    * of the given file.
@@ -52,7 +71,7 @@ public class FileServlet extends DrEditServlet {
       throws IOException {
     Drive service = getDriveService(req, resp);
     String fileId = req.getParameter("file_id");
-
+    
     if (fileId == null) {
       sendError(resp, 400, "The `file_id` URI parameter must be specified.");
       return;
@@ -71,13 +90,25 @@ public class FileServlet extends DrEditServlet {
       }
     }
 
-    if (file != null) {
-      String content = downloadFileContent(service, file);
-      if (content == null) {
-        content = "";
-      }
-      resp.setContentType(JSON_MIMETYPE);
-      resp.getWriter().print(new ClientFile(file, content).toJson());
+    if (file != null) {    	
+    	
+    	System.out.println("Fetching file");
+    	
+    	Userinfo userInfo = getUserInfo(req, resp);
+    	List<Entity> sections = getSections(userInfo, fileId);
+    	
+    	JsonArray sectionArray = new JsonArray();
+    	System.out.println("Found section count " + sections.size());
+    	for (final Entity section : sections) {
+    		System.out.println(section);
+    		JsonObject sectionObj = new JsonObject();
+    		sectionObj.addProperty("title", section.getProperty("title").toString());
+    		sectionObj.addProperty("text", section.getProperty("text").toString());
+    		sectionArray.add(sectionObj);    
+    	}
+        
+        resp.setContentType(JSON_MIMETYPE);
+        resp.getWriter().print(new ClientFile(file, sectionArray.toString()).toJson());
     } else {
       sendError(resp, 404, "File not found");
     }
@@ -98,6 +129,9 @@ public class FileServlet extends DrEditServlet {
       file = service.files().insert(file,
           ByteArrayContent.fromString(clientFile.mimeType, convertContentToFileString(clientFile.content)))
           .execute();
+      
+      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+      createUserFileEntry(datastore, clientFile.content, file.getId(), getUserInfo(req, resp));
     } else {
       file = service.files().insert(file).execute();
     }
@@ -116,31 +150,118 @@ public class FileServlet extends DrEditServlet {
     boolean newRevision = req.getParameter("newRevision").equals(Boolean.TRUE);
     Drive service = getDriveService(req, resp);
     ClientFile clientFile = new ClientFile(req.getReader());
+    
     File file = clientFile.toFile();
     // If there is content we update the given file
     if (clientFile.content != null) {
       file = service.files().update(clientFile.resource_id, file,
           ByteArrayContent.fromString(clientFile.mimeType, convertContentToFileString(clientFile.content)))
           .setNewRevision(newRevision).execute();
+      
+      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+      createUserFileEntry(datastore, clientFile.content, file.getId(), getUserInfo(req, resp));
     } else { // If there is no content we patch the metadata only
       file = service.files().patch(clientFile.resource_id, file).setNewRevision(newRevision).execute();
-    }
-
+    }    
+    
     resp.setContentType(JSON_MIMETYPE);
     resp.getWriter().print(new Gson().toJson(file.getId()).toString());
   }
   
-  private String convertContentToFileString(String contentString) {	  
+  private Userinfo getUserInfo(HttpServletRequest req, HttpServletResponse resp) {
+	  
+	  Oauth2 service = getOauth2Service(req, resp);
+	  try {
+		return service.userinfo().get().execute();
+	  } catch (IOException e) {		
+		e.printStackTrace();		
+	  }
+	  
+	  return null;
+  }
+  
+  private List<Entity> getSections(final Userinfo userInfo, final String fileId) {
+	  DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	  
+	  final Key userKey = KeyFactory.createKey("User", userInfo.getId());
+	  final Key fileKey = KeyFactory.createKey(userKey, "File", fileId);
+	  System.out.println("Filtering on " + fileId);
+	  
+	  
+	  final Query sectionQuery = new Query("File")
+	  	.setAncestor(fileKey)
+		.addFilter(Entity.KEY_RESERVED_PROPERTY,
+                      Query.FilterOperator.GREATER_THAN,
+                      fileKey);
+
+      return datastore.prepare(sectionQuery).asList(FetchOptions.Builder.withDefaults());	       
+  }
+  
+  
+  
+  private List<Entity> createUserFileEntry(final DatastoreService datastore, final String content, final String fileId, final Userinfo user) {
+	  JsonElement jelem = new Gson().fromJson(content, JsonElement.class);
+	  JsonArray contentObj = jelem.getAsJsonArray();
+	  
+	  deleteExistingKeys(user, datastore, fileId);
+	  
+	  final List<Entity> entries = new ArrayList<Entity>();
+	  System.out.println("Creating user entity " + user.getId());
+	  final Entity userEntity = new Entity("User", user.getId());      	  
+	  
+	  List<Entity> childEntries = createFileEntry(fileId, contentObj, userEntity);
+	  
+	  entries.add(userEntity);
+	  entries.addAll(childEntries);
+	
+	  datastore.put(entries);
+	
+      return entries;
+  }
+
+  private void deleteExistingKeys(Userinfo userInfo, final DatastoreService datastore, final String fileId) {
+	  List<Entity> existingSections = getSections(userInfo, fileId);
+	  List<Key> existingKeys = new ArrayList<Key>();
+	  for (Entity entity : existingSections) {
+		  existingKeys.add(entity.getKey());
+	  }
+	  
+	  datastore.delete(existingKeys);
+  }
+  
+  private List<Entity> createFileEntry(final String fileId, final JsonArray json, final Entity parentUser) {
+	  final List<Entity> entries = new ArrayList<Entity>();
+	  final Entity file = new Entity("File", fileId, parentUser.getKey());      	  
+	  	  
+	  entries.add(file);
+	  
+	  System.out.println("Now adding " + json.size() + " sections");
+	  for (int i = 0; i < json.size(); i++) {
+		  final Entity section = createFileSectionEntry(json.get(i).getAsJsonObject(), file);
+		  entries.add(section);
+	  }
+	  System.out.println("createFileEntry gives us " + entries.size());
+      return entries;
+  }
+  
+  private Entity createFileSectionEntry(final JsonObject json, final Entity parentFile) {
+	  final Entity section = new Entity("File", parentFile.getKey());
+	  section.setProperty("title", json.get("title").getAsString());
+	  section.setProperty("text", json.get("text").getAsString());      	 	 
+	  
+      return section;
+  }
+  
+  private String convertContentToFileString(final String contentString) {	  
 	  JsonElement jelem = new Gson().fromJson(contentString, JsonElement.class);
 	  JsonArray contentObj = jelem.getAsJsonArray();
 	  
 	  StringBuilder sb = new StringBuilder();
 	  
-	  for (JsonElement entry : contentObj) {		  
-		  for (JsonElement entry2 : entry.getAsJsonArray()) {
-			  sb.append(entry2.getAsJsonObject().get("title").getAsString()).append("\n");		  
-			  sb.append(entry2.getAsJsonObject().get("text").getAsString()).append("\n\n");
-		  }
+	  for (JsonElement entry : contentObj) {		  		  
+		  final JsonObject section = entry.getAsJsonObject(); 
+		  sb.append(section.get("title").getAsString()).append("\n");		  
+		  sb.append(section.get("text").getAsString()).append("\n\n");
 	  }
 	  
 	  return sb.toString();
