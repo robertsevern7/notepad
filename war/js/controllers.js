@@ -13,22 +13,82 @@ function UserCtrl($scope, backend) {
 function UpdaterCtrl($scope, editor) {
 	$scope.ROW_SIZE = 3;
 	$scope.PROMPT_TEXT = 'Add Content';
-	$scope.sections = [
-		[{
-			id: 'section_0',
-			title: '',
-			text: '',
-			displayText: $scope.PROMPT_TEXT,
-			emptyContent: true
-		}]
-    ];
+	$scope.sections = {
+	    data: [[]],
+	    clearData: function() {
+	    	$scope.sections.data = [[]]
+	    },
+		addSection: function(title, text) {
+			var count = 0;
+			for (var i = 0, len = $scope.sections.data.length; i < len; i++) {
+				for (var j = 0, len2 = $scope.sections.data[i].length; j < len2; j++) {
+					count++;
+				}
+			}
+			var nextId = 'section_' + count;
+			var currRow = $scope.sections.data[$scope.sections.data.length - 1];			
+			
+			var display = text || (title ? '' : $scope.PROMPT_TEXT);
+		    var emptyContent = !(text || title);
+			
+		    var newSection = {
+				id: nextId,
+				title: title || '',
+				text: text || '',
+				displayText: display,
+				emptyContent: emptyContent
+			}
+			if (currRow.length === $scope.ROW_SIZE) {
+				currRow = [];
+				$scope.sections.data.push(currRow);
+			}
+			currRow.push(newSection);
+			
+			return nextId;
+		},
+		getOutputFormat: function() {
+			var outputContent = [];
+        	
+        	for (var i = 0, len = $scope.sections.data.length; i < len; ++i) {
+        		var subArray = $scope.sections.data[i];
+        		for (var j = 0, len2 = subArray.length; j < len2; ++j) {
+        			outputContent.push(subArray[j]);
+        		}
+        	}
+        	
+        	return outputContent;
+		},
+		setActive: function(id) {
+			findActiveSection(id);
+			$('.selected').removeClass('selected');
+			var ed = $('#editor');
+			var title = $('#titleBox');
+			
+			var titleText = title.val();
+			var edText = ed.val();
+			
+			//clear to allow text at end
+			if (titleText || edText) {			
+				ed.val('');
+				ed.focus();
+				ed.val(edText);
+			} else {			
+				title.val('');
+				title.focus();
+				title.val(titleText);
+			}
+			
+			setTimeout(function() {
+				$('#' + id).addClass('selected');
+			}, 100);		
+		}
+	};
+	
+	editor.DataToSave = $scope.sections;    
+    $scope.sections.addSection();    
 	
 	var editorInput = $('#editor');
 	var titleBox = $('#titleBox');
-		
-	setTimeout(function() {
-	    $scope.setActive($scope.sections[0][0].id);
-	}, 500);
 	
 	$scope.updateSelectedBox = function() {
 		$scope.activeSection.title = titleBox.val();
@@ -40,10 +100,10 @@ function UpdaterCtrl($scope, editor) {
 	}
 	
 	var findActiveSection = function(id) {
-		for (var i = 0, len = $scope.sections.length; i < len; i++) {
-			for (var j = 0, len2 = $scope.sections[i].length; j < len2; j++) {
-				if ($scope.sections[i][j].id === id) {
-					$scope.activeSection = $scope.sections[i][j];
+		for (var i = 0, len = $scope.sections.data.length; i < len; i++) {
+			for (var j = 0, len2 = $scope.sections.data[i].length; j < len2; j++) {
+				if ($scope.sections.data[i][j].id === id) {
+					$scope.activeSection = $scope.sections.data[i][j];
 					
 					titleBox.val($scope.activeSection.title);
 					editorInput.val($scope.activeSection.text);
@@ -52,56 +112,10 @@ function UpdaterCtrl($scope, editor) {
 			}
 		}
 	} 
-		
-	$scope.setActive = function(id) {
-		findActiveSection(id);
-		$('.selected').removeClass('selected');
-		var ed = $('#editor');
-		var title = $('#titleBox');
-		
-		var titleText = title.val();
-		var edText = ed.val();
-		
-		//clear to allow text at end
-		if (titleText || edText) {			
-			ed.val('');
-			ed.focus();
-			ed.val(edText);
-		} else {			
-			title.val('');
-			title.focus();
-			title.val(titleText);
-		}
-		
-		setTimeout(function() {
-			$('#' + id).addClass('selected');
-		}, 100)		
-	}
-	
+			
 	$scope.addSection = function() {
-		var count = 0;
-		for (var i = 0, len = $scope.sections.length; i < len; i++) {
-			for (var j = 0, len2 = $scope.sections[i].length; j < len2; j++) {
-				count++;
-			}
-		}
-		var nextId = 'section_' + count;
-		var currRow = $scope.sections[$scope.sections.length - 1]
-
-	    var newSection = {
-			id: nextId,
-			title: '',
-			text: '',
-			displayText: $scope.PROMPT_TEXT,
-			emptyContent: true
-		}
-		if (currRow.length === $scope.ROW_SIZE) {
-			currRow = [];
-			$scope.sections.push(currRow);
-		}
-		currRow.push(newSection);
-		
-		$scope.setActive(nextId);
+		var nextId = $scope.sections.addSection();
+	    $scope.sections.setActive(nextId);
 	}
 }
 

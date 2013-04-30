@@ -72,7 +72,7 @@
         <span class="titleInput addbutton" ng-click="addSection()">+ Add Section</span>
         <table class="bitOnRight">
           <tr><td class="minisection"/><td class="minisection"/><td class="minisection"/></tr>                  
-          <tr ng-repeat="sectionrow in sections">
+          <tr ng-repeat="sectionrow in sections.data">
             <td class="minisection" ng-repeat="section in sectionrow">
               <div id={{section.id}} ng-click="setActive(section.id)" class="bordered" ng-class="{'emptycontent': section.emptyContent}">
                 <h3>{{section.title}}</h3>                                  

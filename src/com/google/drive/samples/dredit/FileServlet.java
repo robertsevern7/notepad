@@ -30,7 +30,6 @@ import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.drive.samples.dredit.model.ClientFile;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;

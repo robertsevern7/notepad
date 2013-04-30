@@ -41,14 +41,7 @@ module.factory('editor',
                 data.resource_id = doc.resource_id;               
                 
                 if (doc.info.editable) {
-                	var outputContent = [];
-                	
-                	for (var i = 0, len = this.DataToSave.length; i < len; ++i) {
-                		var subArray = this.DataToSave[i];
-                		for (var j = 0, len2 = subArray.length; j < len2; ++j) {
-                			outputContent.push(subArray[j]);
-                		}
-                	}
+                	var outputContent = this.DataToSave.getOutputFormat();                	
                     data.content = JSON.stringify(outputContent);
                 }
                 return data;
@@ -134,9 +127,18 @@ module.factory('editor',
                 doc.lastSave = 0;
                 doc.info = fileInfo;
                 doc.resource_id = fileInfo.resource_id;
-                editor.value = fileInfo.content;
-                //editor.setReadOnly(!doc.info.editable);
-                editor.focus();
+                
+                var data = fileInfo.content ? JSON.parse(fileInfo.content) : [];
+                this.DataToSave.clearData();
+                if (data.length === 0) {
+                	this.DataToSave.addSection();
+                } else {
+	                for (var i = 0, len = data.length; i < len; ++i) {
+	                	this.DataToSave.addSection(data[i].title, data[i].text);
+	                }
+                }
+                             
+                this.DataToSave.setActive(this.DataToSave.data[0][0].id);                
             },
             state:function () {
                 if (this.loading) {
