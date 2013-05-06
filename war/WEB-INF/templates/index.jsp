@@ -74,7 +74,7 @@
           <tr><td class="minisection"/><td class="minisection"/><td class="minisection"/></tr>                  
           <tr ng-repeat="sectionrow in sections.data">
             <td class="minisection" ng-repeat="section in sectionrow">
-              <div id={{section.id}} ng-click="setActive(section.id)" class="bordered" ng-class="{'emptycontent': section.emptyContent}">
+              <div id={{section.id}} ng-click="setActive(section.id)" class="bordered" ng-class="{'emptycontent': section.emptyContent}">              
                 <h3>{{section.title}}</h3>                                  
                 <div>{{section.displayText}}</div>                
               </div>
@@ -87,10 +87,8 @@
     </div>
     <alert id="error"></alert>
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
     <script src="lib/jquery/jquery-1.7.2.min.js"></script>
+    <script src="lib/jquery/jqueryui-1.8.9.js"></script>
     <script src="lib/ace/ace.js" charset="utf-8"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://www.google.com/jsapi"></script>

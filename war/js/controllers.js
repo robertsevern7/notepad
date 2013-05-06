@@ -44,6 +44,92 @@ function UpdaterCtrl($scope, editor) {
 			}
 			currRow.push(newSection);
 			
+			setTimeout(function() {
+				var index;
+				var draggedIndex;
+				var dragged;
+				
+				$('.bordered').draggable({
+					containment: '.bitOnRight',
+					revert: 'invalid',
+					stack: '.bordered',
+					cursorAt: {left: 20, top: 20},
+					helper: function(event) {						
+						return $("<div class='contenthover'></div>")[0];
+					},
+					start: function() {
+						$(this).addClass('dragged');
+						$(this).fadeTo(200, 0.7);						
+						draggedIndex = this.id;
+					},
+					stop: function() {
+						$(this).removeClass('dragged');
+						$(this).fadeTo(200, 1);						
+					}					 
+				});
+				
+				$(".bordered" ).droppable({
+				    over: function(event, ui) {
+				    	var sectionId = this.id;
+				    	var previous;
+				    	var behind = false;
+				    	
+				    	$(this).fadeTo(200, 0.7);
+				    	$scope.$apply(function(){					    	
+					    	$scope.sections.backup = [];
+					    	
+					    	for (var i = 0, len = $scope.sections.data.length; i < len; ++i) {
+					    		var currentBackupRow = [];
+					    		$scope.sections.backup.push(currentBackupRow);
+				        		var subArray = $scope.sections.data[i];
+				        		for (var j = 0, len2 = subArray.length; j < len2; ++j) {
+				        			var section = subArray[j];
+				        			
+				        			var copy = $.extend({}, section);
+				        			currentBackupRow.push(copy);				        			
+				        			
+				        			if (behind) {				        				
+				        				previous.displayText = copy.displayText;
+				        				previous.text = copy.text;
+				        				previous.title = copy.title;
+				        			}
+				        			
+				        			if (section.id === draggedIndex) {				        			
+				        				dragged = $.extend({}, section);
+				        				behind = true; 
+				        			} else if (section.id === sectionId) {				        			
+				        				behind = false;
+				        				section.displayText = dragged.displayText;
+				        				section.text = dragged.text;
+				        				section.title = dragged.title;
+				        			} 
+				        			
+				        			previous = section;
+				        		}
+				        	}					    	
+				    	});
+				    },
+				    out: function() {
+				    	$(this).fadeTo(200, 1);
+				    	$scope.$apply(function(){				    		
+					    	for (var i = 0, len = $scope.sections.data.length; i < len; ++i) {					    							    	
+				        		var backUpSubArray = $scope.sections.backup[i];
+				        		var dataSubArray = $scope.sections.data[i];
+				        		
+				        		for (var j = 0, len2 = backUpSubArray.length; j < len2; ++j) {
+				        			var backUpSection = backUpSubArray[j];
+				        			var dataSection = dataSubArray[j];
+				        			$.extend(dataSection, backUpSection);				        							        			
+				        		}
+				        	}					    	
+				    	});				    	
+				    },
+				    drop: function(event, ui) {
+				    	$scope.sections.setActive(this.id);
+				    	$(this).fadeTo(200, 1);				    	
+				    }
+				});
+			}, 100);
 			return nextId;
 		},
 		getOutputFormat: function() {
@@ -77,6 +163,8 @@ function UpdaterCtrl($scope, editor) {
 				title.focus();
 				title.val(titleText);
 			}
+			
+			//TODO Make the active input box glow to indicate to type there?
 			
 			setTimeout(function() {
 				$('#' + id).addClass('selected');
@@ -115,12 +203,12 @@ function UpdaterCtrl($scope, editor) {
 			
 	$scope.addSection = function() {
 		var nextId = $scope.sections.addSection();
-	    $scope.sections.setActive(nextId);
+	    $scope.sections.setActive(nextId);	    
 	}
 	
 	$scope.setActive = function(id) {
 		$scope.sections.setActive(id);
-	}
+	}	
 }
 
 function EditorCtrl($scope, $location, $routeParams, $timeout, editor, doc, autosaver) {

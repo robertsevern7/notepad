@@ -100,6 +100,10 @@ body {
     background-color: #FAFAFA;
 }
 
+.bordered.ui-draggable-dragging { 
+	box-shadow: 5px 5px 5px #888888;	
+}
+
 .bordered:hover {
     background-color: #F2F2F2;
 }
@@ -128,8 +132,23 @@ body {
 	border-width: 2px;
 }
 
+.dragged {
+	box-shadow: 5px 5px 5px #888888;
+}
+
 .emptycontent {
 	border-style: dashed;	
 	color: #999999;
 	font-size: 16px;
+}
+
+.contenthover {
+    border: 2px solid;
+	border-radius: 20px;
+	width: 20px;
+	height: 20px;
+	background-color: grey;
+	text-align: center;
+	line-height: 20px;
+	z-index: 200;
 }
