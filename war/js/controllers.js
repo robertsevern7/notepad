@@ -149,26 +149,46 @@ function UpdaterCtrl($scope, editor) {
 			$('.selected').removeClass('selected');
 			var ed = $('#editor');
 			var title = $('#titleBox');
+			var arrow = $('.arrow_box');
 			
 			var titleText = title.val();
 			var edText = ed.val();
 			
-			//clear to allow text at end
+			arrow.animate({
+				opacity: 1
+			}, 750, function() {
+				arrow.animate({
+					opacity: 0
+				}, 750);
+			});				
+									
+			var pos;
+			
 			if (titleText || edText) {			
 				ed.val('');
 				ed.focus();
 				ed.val(edText);
+				ed.addClass('focused');
+				pos = ed.position();
 			} else {			
 				title.val('');
 				title.focus();
-				title.val(titleText);
-			}
+				title.val(titleText);				
+				title.addClass('focused');
+				pos = title.position();
+			}			
 			
-			//TODO Make the active input box glow to indicate to type there?
+			arrow.css('left', (pos.left + 80) + 'px');
+			arrow.css('top', pos.top + 'px');
 			
 			setTimeout(function() {
 				$('#' + id).addClass('selected');
-			}, 100);		
+			}, 100);
+			
+			setTimeout(function() {
+				ed.removeClass('focused');
+				title.removeClass('focused');
+			}, 1500);
 		}
 	};
 	

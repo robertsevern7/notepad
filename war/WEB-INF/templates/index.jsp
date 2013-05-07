@@ -61,6 +61,7 @@
     <div ng-view></div>
 
     <div class="row editorHolder" ng-controller="UpdaterCtrl">
+      <div class="arrow_box"></div>
       <div class="span1"><br></div>
       <div class="span6 fullHeight">
         <div>        
