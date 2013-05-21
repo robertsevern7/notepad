@@ -178,7 +178,7 @@ function UpdaterCtrl($scope, editor) {
 				pos = title.position();
 			}			
 			
-			arrow.css('left', (pos.left + 80) + 'px');
+			arrow.css('left', (pos.left + 280) + 'px');
 			arrow.css('top', pos.top + 'px');
 			
 			setTimeout(function() {
